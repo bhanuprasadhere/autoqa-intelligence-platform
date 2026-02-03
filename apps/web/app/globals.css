@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  
+  /* Neon Colors */
+  --color-neon-green: #39ff14;
+  --color-neon-purple: #bc13fe;
+  --color-neon-pink: #ff073a;
+  --color-neon-cyan: #0ff0fc;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-neon-green: var(--color-neon-green);
+  --color-neon-purple: var(--color-neon-purple);
+  --color-neon-pink: var(--color-neon-pink);
+  --color-neon-cyan: var(--color-neon-cyan);
+  
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
