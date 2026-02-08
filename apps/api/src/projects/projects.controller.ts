@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 
@@ -14,5 +14,36 @@ export class ProjectsController {
     @Get()
     findAll() {
         return this.projectsService.findAll();
+    }
+
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.projectsService.findOne(id);
+    }
+
+    @Get(':id/scans')
+    findScans(@Param('id') id: string) {
+        return this.projectsService.findScans(id);
+    }
+
+    @Post(':id/scans')
+    createScan(@Param('id') id: string) {
+        return this.projectsService.createScan(id);
+    }
+
+    @Post(':projectId/scans/:scanId/stop')
+    stopScan(@Param('scanId') scanId: string) {
+        return this.projectsService.stopScan(scanId);
+    }
+
+    @Get(':projectId/scans/:scanId/logs')
+    getLogs(@Param() params: any) {
+        console.log('[ProjectsController] Route Params:', params);
+        return this.projectsService.getLogs(params.scanId);
+    }
+
+    @Post(':id/delete')
+    delete(@Param('id') id: string) {
+        return this.projectsService.delete(id);
     }
 }

@@ -12,6 +12,6 @@ import { SCAN_JOBS_QUEUE } from '../queue/queue.constants';
     }),
   ],
   controllers: [ProjectsController],
-  providers: [ProjectsService, PrismaService],
+  providers: [ProjectsService],
 })
 export class ProjectsModule { }

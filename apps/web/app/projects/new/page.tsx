@@ -2,43 +2,38 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useCreateProject } from '@/lib/hooks/use-api';
+import { toast } from 'sonner';
 
 export default function CreateProjectPage() {
     const router = useRouter();
-    const [loading, setLoading] = useState(false);
-    const [projectId, setProjectId] = useState<string | null>(null);
+    const createProject = useCreateProject();
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
-        setLoading(true);
 
         const formData = new FormData(e.currentTarget);
         const data = {
-            name: formData.get('name'),
-            baseUrl: formData.get('baseUrl'),
+            name: formData.get('name') as string,
+            baseUrl: formData.get('baseUrl') as string,
             userId: '00000000-0000-0000-0000-000000000001', // Hardcoded test UUID for walking skeleton
         };
 
-        try {
-            const res = await fetch('http://localhost:4000/projects', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (!res.ok) throw new Error('Failed to create project');
-
-            const project = await res.json();
-            setProjectId(project.id);
-            // router.push('/dashboard'); // Stay on page to show success for now
-        } catch (error) {
-            console.error(error);
-            alert('Error creating project');
-        } finally {
-            setLoading(false);
-        }
+        createProject.mutate(data, {
+            onSuccess: (project: any) => {
+                if (project._isExisting) {
+                    toast.info(project.message || 'This project already exists. Redirecting...');
+                } else {
+                    toast.success('Project created successfully!');
+                }
+                // Navigate to projects list - cache will auto-update
+                router.push('/projects');
+            },
+            onError: (error: any) => {
+                console.error(error);
+                toast.error(error.message || 'Failed to create project');
+            },
+        });
     }
 
     return (
@@ -51,50 +46,37 @@ export default function CreateProjectPage() {
                 <div className="bg-gray-900 border border-[var(--color-neon-purple)] rounded-lg p-6 shadow-[0_0_20px_rgba(188,19,254,0.3)]">
                     <h2 className="text-xl font-semibold mb-4 text-white">New Target Project</h2>
 
-                    {projectId ? (
-                        <div className="text-center space-y-4">
-                            <div className="text-[var(--color-neon-green)] text-lg">Project Created! 🚀</div>
-                            <div className="text-sm text-gray-400">ID: {projectId}</div>
-                            <button
-                                onClick={() => setProjectId(null)}
-                                className="text-[var(--color-neon-cyan)] hover:underline"
-                            >
-                                Create Another
-                            </button>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">Project Name</label>
+                            <input
+                                name="name"
+                                type="text"
+                                placeholder="My E-commerce App"
+                                required
+                                className="w-full bg-black border border-gray-700 rounded p-2 focus:border-[var(--color-neon-cyan)] focus:outline-none text-white transition-colors"
+                            />
                         </div>
-                    ) : (
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Project Name</label>
-                                <input
-                                    name="name"
-                                    type="text"
-                                    placeholder="My E-commerce App"
-                                    required
-                                    className="w-full bg-black border border-gray-700 rounded p-2 focus:border-[var(--color-neon-cyan)] focus:outline-none text-white transition-colors"
-                                />
-                            </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Base URL</label>
-                                <input
-                                    name="baseUrl"
-                                    type="url"
-                                    placeholder="https://example.com"
-                                    required
-                                    className="w-full bg-black border border-gray-700 rounded p-2 focus:border-[var(--color-neon-cyan)] focus:outline-none text-white transition-colors"
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">Base URL</label>
+                            <input
+                                name="baseUrl"
+                                type="url"
+                                placeholder="https://example.com"
+                                required
+                                className="w-full bg-black border border-gray-700 rounded p-2 focus:border-[var(--color-neon-cyan)] focus:outline-none text-white transition-colors"
+                            />
+                        </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-2 bg-[var(--color-neon-purple)] hover:bg-[#a010d8] text-white font-bold rounded shadow-[0_0_15px_var(--color-neon-purple)] transition-all disabled:opacity-50"
-                            >
-                                {loading ? 'Initializing...' : 'Initialize Scans'}
-                            </button>
-                        </form>
-                    )}
+                        <button
+                            type="submit"
+                            disabled={createProject.isPending}
+                            className="w-full py-2 bg-[var(--color-neon-purple)] hover:bg-[#a010d8] text-white font-bold rounded shadow-[0_0_15px_var(--color-neon-purple)] transition-all disabled:opacity-50"
+                        >
+                            {createProject.isPending ? 'Initializing...' : 'Initialize Scans'}
+                        </button>
+                    </form>
                 </div>
             </main>
         </div>

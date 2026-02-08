@@ -68,6 +68,7 @@ model ScanLog {
   message       String
   urlPath       String?  @map("url_path")
   screenshotUrl String?  @map("screenshot_url")
+  aiAnalysis    Json?    @map("ai_analysis")
   createdAt     DateTime @default(now()) @map("created_at")
 
   scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)

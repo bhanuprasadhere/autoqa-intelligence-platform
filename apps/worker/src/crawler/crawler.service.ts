@@ -6,6 +6,7 @@ export interface CrawlResult {
     screenshot: Buffer;
     url: string;
     timestamp: Date;
+    page: Page; // Keep page open for link extraction
 }
 
 @Injectable()
@@ -44,14 +45,35 @@ export class CrawlerService implements OnModuleInit, OnModuleDestroy {
             const screenshot = await page.screenshot({ fullPage: true });
             console.log(`[Crawler] Screenshot captured (${screenshot.length} bytes)`);
 
+            // Don't close page - let processor extract links first
             return {
                 title,
                 screenshot,
                 url,
                 timestamp: new Date(),
+                page, // Return page for link extraction
             };
-        } finally {
-            await page.close();
+        } catch (error) {
+            // Close page on error
+            try {
+                await page.close();
+            } catch (closeError) {
+                console.error('[Crawler] Failed to close page after error', closeError);
+            }
+
+            // Check if browser crashed
+            if (!this.browser.isConnected()) {
+                console.error('[Crawler] Browser crashed, restarting...');
+                try {
+                    await this.browser.close();
+                } catch (e) {
+                    // Ignore close errors
+                }
+                this.browser = await chromium.launch({ headless: true });
+                console.log('[Crawler] Browser restarted');
+            }
+
+            throw error;
         }
     }
 }
